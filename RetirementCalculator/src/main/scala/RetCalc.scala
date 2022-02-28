@@ -1,4 +1,5 @@
 import scala.annotation.tailrec
+import scala.collection.mutable.ArrayBuffer
 
 object RetCalc {
 
@@ -24,6 +25,25 @@ object RetCalc {
     (0 until nbOfMonths).foldLeft(initialCapital)(
       (accumulated, _) => accumulated * (1 + interestRate) + monthlySavings
     )
+  }
+
+  def futureCapitalV2(interestRate: Double,
+                      nbOfMonths: Int,
+                      netIncome:Int,
+                      currentExpenses: Int,
+                      initialCapital: Double): Double = {
+
+    val monthlySavings = netIncome - currentExpenses
+
+    val capitals: ArrayBuffer[Double] = ArrayBuffer.fill(nbOfMonths + 1) {
+      0.0
+    }
+    capitals(0) = initialCapital
+
+    for (i <- Range.inclusive(1, nbOfMonths)) {
+      capitals(i) = capitals(i - 1) * (1 + interestRate) + monthlySavings
+    }
+    capitals(nbOfMonths)
   }
 
   /** Return a Tuple2 that contains two capitals: one at retirement and one remaining after death
@@ -60,14 +80,14 @@ object RetCalc {
     (capitalAtRetirement, capitalAfterDeath)
   }
 
-  /** Return the number of months to work before retirement
+  /** Return the number of months to save before retirement
    *
    * @param interestRate interest rate of each month
    * @param nbOfMonthsInRetirement number of months user will live after retirement
    * @param netIncome total income in one month
    * @param currentExpenses total expense in a month
    * @param initialCapital the initial amount of money
-   * @return
+   * @return the number of months to save before retirement
    */
   def nbOfMonthsSaving(interestRate: Double,
                        nbOfMonthsInRetirement: Int,
@@ -98,5 +118,46 @@ object RetCalc {
     } else {
       loop(0)
     }
+  }
+
+  /** Rewrite method nbOfMonthsSaving in a recursive way
+   *
+   * @param interestRate interest rate of each month
+   * @param nbOfMonthsInRetirement number of months user will live after retirement
+   * @param netIncome total income in one month
+   * @param currentExpenses total expense in a month
+   * @param initialCapital the initial amount of money
+   * @return the number of months to save before retireme
+   */
+  def getNumberOfMonthToSave(interestRate: Double,
+                             nbOfMonthsInRetirement: Int,
+                             netIncome: Int,
+                             currentExpenses: Int,
+                             initialCapital: Int): Int = {
+    if (netIncome < currentExpenses) {
+      return Int.MaxValue
+    }
+
+    var numberOfMonthSavings: Int = 0
+    var X = simulatePlan(interestRate = interestRate,
+      nbOfMonthsSaving = 0,
+      nbOfMonthsInRetirement = nbOfMonthsInRetirement,
+      netIncome = netIncome,
+      currentExpenses = currentExpenses,
+      initialCapital = initialCapital
+    )
+
+    while (X._2 <= 0) {
+      numberOfMonthSavings = numberOfMonthSavings + 1
+      X = simulatePlan(
+        interestRate = interestRate,
+        nbOfMonthsSaving = numberOfMonthSavings,
+        nbOfMonthsInRetirement = nbOfMonthsInRetirement,
+        netIncome = netIncome,
+        currentExpenses = currentExpenses,
+        initialCapital = initialCapital
+      )
+    }
+    numberOfMonthSavings
   }
 }
