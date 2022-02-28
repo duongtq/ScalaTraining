@@ -1,4 +1,6 @@
 ### Scala template
 *.class
 *.log
-
+.bsp/
+.idea/
+target/
